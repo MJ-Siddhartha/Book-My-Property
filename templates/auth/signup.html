@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - BookMyProperty</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .signup-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 0;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border-radius: 10px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            border: none;
+            border-radius: 10px 10px 0 0;
+        }
+        .form-control {
+            border: 1px solid #bdc3c7;
+            border-radius: 8px;
+            padding: 12px 15px;
+        }
+        .form-control:focus {
+            border-color: #3498db;
+            box-shadow: 0 0 0 0.2rem rgba(52, 152, 219, 0.25);
+        }
+        .btn-primary {
+            background-color: #3498db;
+            border-color: #3498db;
+            border-radius: 8px;
+            padding: 12px 20px;
+        }
+        .btn-primary:hover {
+            background-color: #2980b9;
+            border-color: #2980b9;
+        }
+        .form-check {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        .form-check:hover {
+            border-color: #3498db;
+            background-color: #f8f9fa;
+        }
+        .form-check-input:checked {
+            background-color: #3498db;
+            border-color: #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="signup-container">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card">
+                        <div class="card-header text-white text-center">
+                            <h3 class="mb-0">Create Account</h3>
+                            <p class="mb-0">Join BookMyProperty today!</p>
+                        </div>
+                        <div class="card-body p-4">
+                            <form method="post">
+                                {% csrf_token %}
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_first_name" class="form-label">First Name</label>
+                                            <input type="text" name="first_name" class="form-control" id="id_first_name" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_last_name" class="form-label">Last Name</label>
+                                            <input type="text" name="last_name" class="form-control" id="id_last_name" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_username" class="form-label">Username</label>
+                                    <input type="text" name="username" class="form-control" id="id_username" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="id_email" class="form-label">Email Address</label>
+                                    <input type="email" name="email" class="form-control" id="id_email" required>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_password1" class="form-label">Password</label>
+                                            <input type="password" name="password1" class="form-control" id="id_password1" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="mb-3">
+                                            <label for="id_password2" class="form-label">Confirm Password</label>
+                                            <input type="password" name="password2" class="form-control" id="id_password2" required>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label fw-bold">I want to:</label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-check p-3 border rounded">
+                                                <input type="radio" name="user_type" value="tenant" class="form-check-input" id="id_user_type_0" checked>
+                                                <label class="form-check-label" for="id_user_type_0">
+                                                    <strong>Find Properties</strong>
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Find and book amazing properties for your stay
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check p-3 border rounded">
+                                                <input type="radio" name="user_type" value="owner" class="form-check-input" id="id_user_type_1">
+                                                <label class="form-check-label" for="id_user_type_1">
+                                                    <strong>List Properties</strong>
+                                                </label>
+                                                <small class="form-text text-muted d-block mt-1">
+                                                    Earn money by renting out your properties
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <strong>Please correct the following errors:</strong>
+                                    <ul class="mb-0 mt-2">
+                                        {% for field in form %}
+                                            {% for error in field.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                        {% for error in form.non_field_errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-primary w-100 mb-3">Create Account</button>
+                            </form>
+                            
+                            <div class="text-center">
+                                <p class="mb-0">
+                                    Already have an account? 
+                                    <a href="{% url 'auth:login' %}" class="text-decoration-none">Login here</a>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 

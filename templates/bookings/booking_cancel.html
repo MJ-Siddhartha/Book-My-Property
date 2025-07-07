@@ -1,0 +1,66 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+
+{% block title %}Cancel Booking - BookMyProperty{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0 text-danger">
+                    <i class="bi bi-x-circle"></i> Cancel Booking
+                </h2>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <h5>Are you sure you want to cancel this booking?</h5>
+                    <p class="mb-0">This action cannot be undone. Please review the booking details below.</p>
+                </div>
+
+                <!-- Booking Summary -->
+                <div class="booking-summary mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% if booking.property_obj.main_image %}
+                            <img src="{{ booking.property_obj.main_image.image.url }}" class="img-fluid rounded" alt="{{ booking.property_obj.title }}">
+                            {% else %}
+                            <img src="{% static 'images/placeholder-property.jpg' %}" class="img-fluid rounded" alt="Property placeholder">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h5>{{ booking.property_obj.title }}</h5>
+                            <p class="text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ booking.property_obj.city }}, {{ booking.property_obj.state }}
+                            </p>
+                            <p><strong>Check-in:</strong> {{ booking.check_in_date|date:"M d, Y" }}</p>
+                            <p><strong>Check-out:</strong> {{ booking.check_out_date|date:"M d, Y" }}</p>
+                            <p><strong>Total amount:</strong> ${{ booking.total_amount }}</p>
+                            <p><strong>Status:</strong> 
+                                {% if booking.status == 'confirmed' %}
+                                    <span class="badge bg-success">Confirmed</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form|crispy }}
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="bi bi-x-circle"></i> Confirm Cancellation
+                        </button>
+                        <a href="{% url 'bookings:booking_detail' booking.pk %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left"></i> Back to Booking
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

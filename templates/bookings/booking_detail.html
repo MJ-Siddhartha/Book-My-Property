@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Booking Details - BookMyProperty{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="mb-0">
+                    <i class="bi bi-calendar-check"></i> Booking Details
+                </h2>
+            </div>
+            <div class="card-body">
+                <!-- Property Information -->
+                <div class="property-summary mb-4">
+                    <div class="row">
+                        <div class="col-md-4">
+                            {% if booking.property_obj.main_image %}
+                            <img src="{{ booking.property_obj.main_image.image.url }}" class="img-fluid rounded" alt="{{ booking.property_obj.title }}">
+                            {% else %}
+                            <img src="{% static 'images/placeholder-property.jpg' %}" class="img-fluid rounded" alt="Property placeholder">
+                            {% endif %}
+                        </div>
+                        <div class="col-md-8">
+                            <h4>{{ booking.property_obj.title }}</h4>
+                            <p class="text-muted">
+                                <i class="bi bi-geo-alt"></i> {{ booking.property_obj.city }}, {{ booking.property_obj.state }}
+                            </p>
+                            <div class="row">
+                                <div class="col-4">
+                                    <i class="bi bi-door-open"></i> {{ booking.property_obj.bedrooms }} beds
+                                </div>
+                                <div class="col-4">
+                                    <i class="bi bi-droplet"></i> {{ booking.property_obj.bathrooms }} baths
+                                </div>
+                                <div class="col-4">
+                                    <i class="bi bi-people"></i> Up to {{ booking.property_obj.max_guests }} guests
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Booking Information -->
+                <div class="booking-info">
+                    <h5>Booking Information</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Check-in:</strong> {{ booking.check_in_date|date:"M d, Y" }}</p>
+                            <p><strong>Check-out:</strong> {{ booking.check_out_date|date:"M d, Y" }}</p>
+                            <p><strong>Number of guests:</strong> {{ booking.number_of_guests }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Booking date:</strong> {{ booking.created_at|date:"M d, Y" }}</p>
+                            <p><strong>Total nights:</strong> {{ booking.check_out_date|timeuntil:booking.check_in_date }}</p>
+                            <p><strong>Total amount:</strong> ${{ booking.total_amount }}</p>
+                        </div>
+                    </div>
+
+                    {% if booking.special_requests %}
+                    <div class="mt-3">
+                        <h6>Special Requests:</h6>
+                        <p class="text-muted">{{ booking.special_requests }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="booking-status mt-3">
+                        <h6>Status:</h6>
+                        {% if booking.status == 'confirmed' %}
+                            <span class="badge bg-success">Confirmed</span>
+                        {% elif booking.status == 'pending' %}
+                            <span class="badge bg-warning">Pending</span>
+                        {% elif booking.status == 'cancelled' %}
+                            <span class="badge bg-danger">Cancelled</span>
+                        {% elif booking.status == 'completed' %}
+                            <span class="badge bg-secondary">Completed</span>
+                        {% endif %}
+                    </div>
+
+                    {% if booking.cancellation_reason %}
+                    <div class="mt-3">
+                        <h6>Cancellation Reason:</h6>
+                        <p class="text-muted">{{ booking.cancellation_reason }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Actions -->
+                <div class="d-grid gap-2">
+                    <a href="{% url 'bookings:booking_list' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Back to Bookings
+                    </a>
+                    {% if booking.status == 'confirmed' %}
+                    <a href="{% url 'bookings:booking_cancel' booking.pk %}" class="btn btn-outline-danger">
+                        <i class="bi bi-x-circle"></i> Cancel Booking
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Booking Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="booking-summary">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Price per night:</span>
+                        <span>${{ booking.property_obj.price_per_night }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Number of nights:</span>
+                        <span>{{ booking.check_out_date|timeuntil:booking.check_in_date }}</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold">
+                        <span>Total:</span>
+                        <span>${{ booking.total_amount }}</span>
+                    </div>
+                </div>
+
+                <div class="mt-3">
+                    <h6>What's included:</h6>
+                    <ul class="list-unstyled">
+                        <li><i class="bi bi-check text-success"></i> Full property access</li>
+                        <li><i class="bi bi-check text-success"></i> All amenities</li>
+                        <li><i class="bi bi-check text-success"></i> 24/7 support</li>
+                        <li><i class="bi bi-check text-success"></i> Instant confirmation</li>
+                    </ul>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Need help?</strong> Contact our support team for assistance.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

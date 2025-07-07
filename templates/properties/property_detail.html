@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} - BookMyProperty{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Property Images -->
+    <div class="col-lg-8">
+        <div class="property-gallery">
+            {% if images %}
+            <div id="propertyCarousel" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
+                    {% for image in images %}
+                    <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" class="d-block w-100" alt="{{ image.caption|default:property.title }}" style="height: 400px; object-fit: cover;">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% if images.count > 1 %}
+                <button class="carousel-control-prev" type="button" data-bs-target="#propertyCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#propertyCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                {% endif %}
+            </div>
+            {% else %}
+            <img src="{% static 'images/placeholder-property.jpg' %}" class="img-fluid" alt="Property placeholder" style="height: 400px; object-fit: cover;">
+            {% endif %}
+        </div>
+
+        <!-- Property Information -->
+        <div class="property-info">
+            <h1>{{ property.title }}
+                {% if not property.is_available or property.status != 'available' %}
+                    <span class="badge bg-danger">Booked</span>
+                {% endif %}
+            </h1>
+            <p class="property-location">
+                <i class="bi bi-geo-alt"></i> {{ property.address }}, {{ property.city }}, {{ property.state }} {{ property.zip_code }}
+            </p>
+
+            <div class="row mb-3">
+                <div class="col-md-3">
+                    <i class="bi bi-door-open"></i> {{ property.bedrooms }} Bedrooms
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-droplet"></i> {{ property.bathrooms }} Bathrooms
+                </div>
+                <div class="col-md-3">
+                    <i class="bi bi-people"></i> Up to {{ property.max_guests }} Guests
+                </div>
+                {% if property.square_feet %}
+                <div class="col-md-3">
+                    <i class="bi bi-arrows-angle-expand"></i> {{ property.square_feet }} sq ft
+                </div>
+                {% endif %}
+            </div>
+
+            <h3>About this property</h3>
+            <p>{{ property.description }}</p>
+
+            {% if property.amenities.all %}
+            <h3>Amenities</h3>
+            <div class="row">
+                {% for amenity in property.amenities.all %}
+                <div class="col-md-6 mb-2">
+                    <i class="bi bi-check-circle text-success"></i> {{ amenity.name }}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Booking Form Sidebar -->
+    <div class="col-lg-4">
+        <div class="booking-form">
+            <h3>${{ property.price_per_night }} <small class="text-muted">per night</small></h3>
+            
+            {% if not property.is_available or property.status != 'available' %}
+                <div class="alert alert-danger">
+                    <i class="bi bi-x-circle"></i> This property is <strong>booked</strong> and not available for booking.
+                </div>
+                {% if user.is_authenticated and user.userprofile.user_type == 'tenant' %}
+                <a href="{% url 'bookings:booking_list' %}" class="btn btn-outline-primary w-100 mb-3">
+                    <i class="bi bi-calendar-check"></i> View My Bookings
+                </a>
+                {% endif %}
+            {% else %}
+                {% if user.is_authenticated %}
+                    {% if user.userprofile.user_type == 'tenant' %}
+                        <a href="{% url 'bookings:booking_create' property.pk %}" class="btn btn-primary btn-lg w-100 mb-3">
+                            <i class="bi bi-calendar-check"></i> Book Now
+                        </a>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Only tenants can book properties.
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary btn-lg w-100 mb-3">
+                        <i class="bi bi-person"></i> Login to Book
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            <div class="booking-summary">
+                <h5>Property Details</h5>
+                <ul class="list-unstyled">
+                    <li><i class="bi bi-house"></i> {{ property.get_property_type_display }}</li>
+                    <li><i class="bi bi-door-open"></i> {{ property.bedrooms }} bedrooms</li>
+                    <li><i class="bi bi-droplet"></i> {{ property.bathrooms }} bathrooms</li>
+                    <li><i class="bi bi-people"></i> Up to {{ property.max_guests }} guests</li>
+                    {% if property.price_per_week %}
+                    <li><i class="bi bi-calendar-week"></i> ${{ property.price_per_week }}/week</li>
+                    {% endif %}
+                    {% if property.price_per_month %}
+                    <li><i class="bi bi-calendar-month"></i> ${{ property.price_per_month }}/month</li>
+                    {% endif %}
+                </ul>
+            </div>
+
+            {% if user.is_authenticated and property.owner == user %}
+            <div class="mt-3">
+                <a href="{% url 'properties:property_update' property.pk %}" class="btn btn-outline-primary w-100 mb-2">
+                    <i class="bi bi-pencil"></i> Edit Property
+                </a>
+                <a href="{% url 'properties:property_delete' property.pk %}" class="btn btn-outline-danger w-100">
+                    <i class="bi bi-trash"></i> Delete Property
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

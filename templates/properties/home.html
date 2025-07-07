@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}BookMyProperty - Find Your Perfect Property{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1>Find Your Perfect Property</h1>
+                <p class="lead">Discover amazing properties for your next stay. Book instantly with confidence.</p>
+                <a href="{% url 'properties:property_list' %}" class="btn btn-light btn-lg">Browse Properties</a>
+            </div>
+            <div class="col-lg-6">
+                <!-- Search Form -->
+                <div class="search-form">
+                    <h3 class="text-dark mb-3">Search Properties</h3>
+                    <form method="get" action="{% url 'properties:property_list' %}" id="property-search-form">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                {{ search_form.search }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ search_form.property_type }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ search_form.city }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ search_form.guests }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ search_form.min_price }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ search_form.max_price }}
+                            </div>
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="bi bi-search"></i> Search Properties
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5 bg-light">
+    <div class="container">
+        <div class="row">
+            <div class="col-12">
+                <h2 class="text-center mb-5">Why Choose BookMyProperty?</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-lightning-charge text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Instant Booking</h4>
+                <p>Book your perfect property instantly when available. Hassle free booking.</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-shield-check text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Verified Properties</h4>
+                <p>All properties are verified and reviewed by our community of travelers.</p>
+            </div>
+            <div class="col-md-4 text-center mb-4">
+                <div class="mb-3">
+                    <i class="bi bi-star text-primary" style="font-size: 3rem;"></i>
+                </div>
+                <h4>Best Prices</h4>
+                <p>Find competitive prices and great deals on properties worldwide.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %} 
