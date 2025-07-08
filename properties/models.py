@@ -28,8 +28,6 @@ class Property(models.Model):
     STATUS_CHOICES = (
         ('available', 'Available'),
         ('booked', 'Booked'),
-        ('maintenance', 'Under Maintenance'),
-        ('inactive', 'Inactive'),
     )
     
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='properties')
@@ -40,7 +38,7 @@ class Property(models.Model):
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
     zip_code = models.CharField(max_length=10)
-    country = models.CharField(max_length=100, default='United States')
+    country = models.CharField(max_length=100, default='India')
     
     # Property details
     bedrooms = models.PositiveIntegerField()
