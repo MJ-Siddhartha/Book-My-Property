@@ -115,7 +115,7 @@
                                 <div class="position-relative">
                                     <img src="{{ image.image.url }}" class="img-thumbnail" alt="{{ image.caption|default:'Property image' }}" style="height: 100px; object-fit: cover;">
                                     <button type="button" class="btn btn-sm btn-danger position-absolute top-0 end-0" 
-                                            onclick="deleteImage({{ image.id }})" title="Delete image">
+                                            onclick="deleteImage('{{ image.id }}')" title="Delete image">
                                         <i class="bi bi-x"></i>
                                     </button>
                                 </div>
