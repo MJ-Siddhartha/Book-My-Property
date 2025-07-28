@@ -61,7 +61,9 @@ class Booking(models.Model):
                 raise ValidationError("This property is already booked for the selected dates.")
     
     def save(self, *args, **kwargs):
-        self.clean()
+        # Only run validation if not updating specific fields
+        if not kwargs.get('update_fields'):
+            self.clean()
         super().save(*args, **kwargs)
     
     @property
@@ -98,6 +100,28 @@ class Booking(models.Model):
         self.status = 'completed'
         self.completed_at = timezone.now()
         self.save()
+    
+    def update_status_based_on_dates(self):
+        """Automatically update booking status based on current date"""
+        today = date.today()
+        
+        if self.status == 'confirmed':
+            if self.check_out_date < today:
+                # Booking has ended, mark as completed
+                self.status = 'completed'
+                self.completed_at = timezone.now()
+                self.save()
+                
+                # Make property available again
+                self.property_obj.is_available = True
+                self.property_obj.status = 'available'
+                self.property_obj.save()
+            elif self.check_in_date <= today <= self.check_out_date:
+                # Booking is currently active
+                pass  # Keep as confirmed
+            elif self.check_in_date > today:
+                # Booking is in the future
+                pass  # Keep as confirmed
     
     class Meta:
         ordering = ['-created_at']

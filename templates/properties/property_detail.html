@@ -40,6 +40,35 @@
                     <span class="badge bg-danger">Booked</span>
                 {% endif %}
             </h1>
+            
+            <!-- Rating Display -->
+            <div class="rating-display mb-3">
+                {% if property.average_rating > 0 %}
+                    <div class="d-flex align-items-center">
+                        <div class="text-warning me-2">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= property.average_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <span class="me-2">{{ property.average_rating|floatformat:1 }}</span>
+                        <span class="text-muted">({{ property.review_count }} reviews)</span>
+                    </div>
+                {% else %}
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted me-2">No reviews yet</span>
+                        {% if user.is_authenticated %}
+                            <a href="{% url 'reviews:create_review' property.id %}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-star"></i> Be the first to review
+                            </a>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+            
             <p class="property-location">
                 <i class="bi bi-geo-alt"></i> {{ property.address }}, {{ property.city }}, {{ property.state }} {{ property.zip_code }}
             </p>
@@ -74,39 +103,133 @@
                 {% endfor %}
             </div>
             {% endif %}
+
+
+
+            <!-- Recent Reviews Section -->
+            <div class="reviews-section mt-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>Reviews</h3>
+                    <div>
+                        {% if user.is_authenticated and user_has_booked and not user_has_reviewed %}
+                            <a href="{% url 'reviews:create_review' property.id %}" class="btn btn-success btn-sm me-2">
+                                <i class="fas fa-star"></i> Write Review
+                            </a>
+                        {% elif user.is_authenticated and user_has_reviewed %}
+                            <a href="{% url 'reviews:edit_review' user_review.id %}" class="btn btn-outline-warning btn-sm me-2">
+                                <i class="fas fa-edit"></i> Edit Review
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'reviews:review_list' property.id %}" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-comments"></i> View All Reviews
+                        </a>
+                    </div>
+                </div>
+                
+                {% if property.reviews.all %}
+                    {% for review in property.reviews.all|slice:":3" %}
+                        <div class="review-item border-bottom pb-3 mb-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="mb-1">{{ review.title }}</h6>
+                                    <div class="text-warning mb-1">
+                                        {% for i in "12345" %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="fas fa-star"></i>
+                                            {% else %}
+                                                <i class="far fa-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                        <span class="ms-2 text-muted">{{ review.rating }}/5</span>
+                                    </div>
+                                </div>
+                                <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                            </div>
+                            <p class="mb-2">{{ review.comment|truncatewords:30 }}</p>
+                            <small class="text-muted">By {{ review.user.username }}</small>
+                        </div>
+                    {% endfor %}
+                    
+
+                {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-comments text-muted" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">No reviews yet for this property</p>
+                        {% if user.is_authenticated and user_has_booked %}
+                            <a href="{% url 'reviews:create_review' property.id %}" class="btn btn-primary">
+                                <i class="fas fa-star"></i> Be the first to review
+                            </a>
+                        {% elif user.is_authenticated %}
+                            <p class="text-muted">Book this property to leave a review</p>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 
     <!-- Booking Form Sidebar -->
     <div class="col-lg-4">
         <div class="booking-form">
-            <h3>${{ property.price_per_night }} <small class="text-muted">per night</small></h3>
+                                    <h3>₹{{ property.price_per_night }} <small class="text-muted">per night</small></h3>
             
             {% if not property.is_available or property.status != 'available' %}
-                <div class="alert alert-danger">
-                    <i class="bi bi-x-circle"></i> This property is <strong>booked</strong> and not available for booking.
+                <div class="alert alert-warning">
+                    <i class="bi bi-exclamation-triangle"></i> This property is <strong>currently booked</strong> for some dates.
+                    <br><small class="text-muted">You can still book for other available dates.</small>
                 </div>
-                {% if user.is_authenticated and user.userprofile.user_type == 'tenant' %}
-                <a href="{% url 'bookings:booking_list' %}" class="btn btn-outline-primary w-100 mb-3">
-                    <i class="bi bi-calendar-check"></i> View My Bookings
-                </a>
+            {% else %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> This property is <strong>available</strong> for booking.
+                </div>
+            {% endif %}
+            
+
+            
+            {% if user.is_authenticated %}
+                {% if user.userprofile.user_type == 'tenant' %}
+                    <a href="{% url 'bookings:booking_create' property.pk %}" class="btn btn-primary btn-lg w-100 mb-3">
+                        <i class="bi bi-calendar-check"></i> Check Availability & Book
+                    </a>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> Only tenants can book properties.
+                    </div>
                 {% endif %}
             {% else %}
-                {% if user.is_authenticated %}
-                    {% if user.userprofile.user_type == 'tenant' %}
-                        <a href="{% url 'bookings:booking_create' property.pk %}" class="btn btn-primary btn-lg w-100 mb-3">
-                            <i class="bi bi-calendar-check"></i> Book Now
-                        </a>
-                    {% else %}
-                        <div class="alert alert-info">
-                            <i class="bi bi-info-circle"></i> Only tenants can book properties.
-                        </div>
-                    {% endif %}
-                {% else %}
-                    <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary btn-lg w-100 mb-3">
-                        <i class="bi bi-person"></i> Login to Book
+                <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary btn-lg w-100 mb-3">
+                    <i class="bi bi-person"></i> Login to Book
+                </a>
+            {% endif %}
+
+            <!-- Current Bookings Information -->
+            {% if current_bookings %}
+            <div class="current-bookings mb-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5>Current Bookings</h5>
+                    <a href="{% url 'properties:property_calendar' property.pk %}" class="btn btn-outline-info btn-sm">
+                        <i class="fas fa-calendar-alt"></i> View Calendar
                     </a>
-                {% endif %}
+                </div>
+                <div class="alert alert-info">
+                    <small>
+                        <strong>Note:</strong> This property has existing bookings for the following dates. 
+                        You can still book for other available dates.
+                    </small>
+                </div>
+                {% for booking in current_bookings %}
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <div>
+                        <small class="text-muted">Booking #{{ booking.id }}</small>
+                        <br>
+                        <small>{{ booking.check_in_date|date:"M d, Y" }} - {{ booking.check_out_date|date:"M d, Y" }}</small>
+                    </div>
+                    <span class="badge bg-{% if booking.status == 'confirmed' %}success{% else %}warning{% endif %}">
+                        {{ booking.status|title }}
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
             {% endif %}
 
             <div class="booking-summary">
@@ -117,10 +240,10 @@
                     <li><i class="bi bi-droplet"></i> {{ property.bathrooms }} bathrooms</li>
                     <li><i class="bi bi-people"></i> Up to {{ property.max_guests }} guests</li>
                     {% if property.price_per_week %}
-                    <li><i class="bi bi-calendar-week"></i> ${{ property.price_per_week }}/week</li>
+                                                <li><i class="bi bi-calendar-week"></i> ₹{{ property.price_per_week }}/week</li>
                     {% endif %}
                     {% if property.price_per_month %}
-                    <li><i class="bi bi-calendar-month"></i> ${{ property.price_per_month }}/month</li>
+                                                <li><i class="bi bi-calendar-month"></i> ₹{{ property.price_per_month }}/month</li>
                     {% endif %}
                 </ul>
             </div>

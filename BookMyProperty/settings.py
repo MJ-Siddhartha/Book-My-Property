@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'accounts',
     'properties',
     'bookings',
+    'reviews',
     'crispy_forms',
     'crispy_bootstrap4',
 ]

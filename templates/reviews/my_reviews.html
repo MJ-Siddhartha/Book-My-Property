@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}My Reviews{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star"></i> My Reviews
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        <div class="row">
+                            {% for review in page_obj %}
+                                <div class="col-md-6 mb-4">
+                                    <div class="card h-100 border">
+                                        <div class="card-body">
+                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                <h6 class="card-title mb-0">{{ review.title }}</h6>
+                                                <div class="text-warning">
+                                                    {% for i in "12345" %}
+                                                        {% if forloop.counter <= review.rating %}
+                                                            <i class="fas fa-star"></i>
+                                                        {% else %}
+                                                            <i class="far fa-star"></i>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </div>
+                                            </div>
+                                            
+                                            <p class="card-text text-muted mb-2">{{ review.comment|truncatewords:30 }}</p>
+                                            
+                                            <div class="property-info mb-3">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-home"></i> {{ review.property_obj.title }}
+                                                </small><br>
+                                                <small class="text-muted">
+                                                    <i class="fas fa-map-marker-alt"></i> {{ review.property_obj.city }}
+                                                </small>
+                                            </div>
+                                            
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <small class="text-muted">
+                                                    <i class="fas fa-calendar"></i> {{ review.created_at|date:"M d, Y" }}
+                                                </small>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a href="{% url 'reviews:edit_review' review.id %}" class="btn btn-outline-primary btn-sm">
+                                                        <i class="fas fa-edit"></i> Edit
+                                                    </a>
+                                                    <a href="{% url 'reviews:delete_review' review.id %}" class="btn btn-outline-danger btn-sm">
+                                                        <i class="fas fa-trash"></i> Delete
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                            {% if review.is_recent %}
+                                                <span class="badge bg-success">Recent</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="card-footer bg-light">
+                                            <a href="{% url 'properties:property_detail' review.property_obj.id %}" class="btn btn-outline-secondary btn-sm">
+                                                <i class="fas fa-eye"></i> View Property
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="My reviews pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-star text-muted" style="font-size: 4rem;"></i>
+                            <h5 class="text-muted mt-3">No reviews yet</h5>
+                            <p class="text-muted">You haven't written any reviews yet. Start by booking a property and then share your experience!</p>
+                            <a href="{% url 'properties:property_list' %}" class="btn btn-primary">
+                                <i class="fas fa-search"></i> Browse Properties
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.card-footer {
+    border-radius: 0 0 12px 12px !important;
+}
+</style>
+{% endblock %} 

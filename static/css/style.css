@@ -293,3 +293,107 @@ body {
         margin-top: 30px;
     }
 } 
+
+/* Rating System Styles */
+.rating-display .fas.fa-star,
+.rating-display .far.fa-star {
+    color: #ffc107;
+    font-size: 1.1rem;
+}
+
+.rating-display .far.fa-star {
+    color: #e4e5e9;
+}
+
+.review-item .fas.fa-star,
+.review-item .far.fa-star {
+    color: #ffc107;
+    font-size: 0.9rem;
+}
+
+.review-item .far.fa-star {
+    color: #e4e5e9;
+}
+
+.rating-form .form-control {
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.rating-form .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.review-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.review-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.rating-summary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.rating-distribution .progress {
+    height: 8px;
+    border-radius: 4px;
+    background-color: #f8f9fa;
+}
+
+.rating-distribution .progress-bar {
+    background-color: #ffc107;
+    border-radius: 4px;
+}
+
+.recent-badge {
+    background-color: #28a745;
+    color: white;
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+/* Property card rating styles */
+.property-card .rating-display .fas.fa-star,
+.property-card .rating-display .far.fa-star {
+    font-size: 0.8rem;
+}
+
+/* Review form specific styles */
+.review-form .form-group {
+    margin-bottom: 1.5rem;
+}
+
+.review-form .form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.review-form .form-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .rating-display .fas.fa-star,
+    .rating-display .far.fa-star {
+        font-size: 1rem;
+    }
+    
+    .review-item .fas.fa-star,
+    .review-item .far.fa-star {
+        font-size: 0.8rem;
+    }
+} 

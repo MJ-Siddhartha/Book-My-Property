@@ -7,6 +7,7 @@ from datetime import datetime
 from .models import Booking
 from .forms import BookingForm, BookingCancellationForm
 from properties.models import Property
+from reviews.models import Review
 
 @login_required
 def booking_list(request):
@@ -37,10 +38,7 @@ def booking_create(request, property_id):
     
     property_obj = get_object_or_404(Property, pk=property_id)
     
-    # Check if property is available
-    if not property_obj.is_available or property_obj.status != 'available':
-        messages.error(request, 'This property is not available for booking.')
-        return redirect('properties:property_detail', pk=property_id)
+    # Property is always available for booking (date availability will be checked during booking)
     
     if request.method == 'POST':
         form = BookingForm(request.POST, property_obj=property_obj)
@@ -62,13 +60,10 @@ def booking_create(request, property_id):
             else:
                 # Calculate total amount
                 nights = (booking.check_out_date - booking.check_in_date).days
-                booking.total_amount = nights * property_obj.price_per_night
+                booking.total_price = nights * property_obj.price_per_night
                 booking.status = 'confirmed'  # Instant booking
                 booking.save()
-                property_obj.is_available = False
-                property_obj.status = 'booked'
-                property_obj.save()
-                messages.success(request, f'Booking confirmed! Your total is ${booking.total_amount}.')
+                messages.success(request, f'Booking confirmed! Your total is ₹{booking.total_price}.')
                 return redirect('bookings:booking_detail', pk=booking.pk)
     else:
         form = BookingForm(property_obj=property_obj)
@@ -85,8 +80,20 @@ def booking_detail(request, pk):
     """Show booking details"""
     booking = get_object_or_404(Booking, pk=pk, guest=request.user)
     
+    # Check if user has reviewed this property
+    user_has_reviewed = False
+    user_review = None
+    if booking.status == 'completed':
+        user_review = Review.objects.filter(
+            property_obj=booking.property_obj,
+            user=request.user
+        ).first()
+        user_has_reviewed = user_review is not None
+    
     context = {
         'booking': booking,
+        'user_has_reviewed': user_has_reviewed,
+        'user_review': user_review,
     }
     return render(request, 'bookings/booking_detail.html', context)
 
@@ -105,17 +112,23 @@ def booking_cancel(request, pk):
         return redirect('bookings:booking_detail', pk=booking.pk)
     
     if request.method == 'POST':
-        form = BookingCancellationForm(request.POST, instance=booking)
+        form = BookingCancellationForm(request.POST, booking=booking)
         if form.is_valid():
             booking.status = 'cancelled'
-            booking.cancellation_reason = form.cleaned_data.get('cancellation_reason', '')
+            booking.cancellation_reason = form.cleaned_data.get('reason', '')
             booking.cancelled_at = timezone.now()
             booking.save()
+            
+            # Make property available again
+            property_obj = booking.property_obj
+            property_obj.is_available = True
+            property_obj.status = 'available'
+            property_obj.save()
             
             messages.success(request, 'Booking cancelled successfully.')
             return redirect('bookings:booking_list')
     else:
-        form = BookingCancellationForm(instance=booking)
+        form = BookingCancellationForm(booking=booking)
     
     context = {
         'form': form,

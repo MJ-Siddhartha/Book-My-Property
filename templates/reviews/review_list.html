@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Reviews - {{ property.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Rating Summary -->
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-star"></i> Rating Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if rating_stats.total_reviews > 0 %}
+                        <div class="text-center mb-3">
+                            <h2 class="text-primary mb-0">{{ rating_stats.avg_rating|floatformat:1 }}</h2>
+                            <div class="text-warning mb-2">
+                                {% for i in "12345" %}
+                                    {% if forloop.counter <= rating_stats.avg_rating %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <p class="text-muted">{{ rating_stats.total_reviews }} reviews</p>
+                        </div>
+
+                        <!-- Rating Distribution -->
+                        <div class="rating-distribution">
+                            {% for rating, count in rating_distribution.items %}
+                                <div class="d-flex align-items-center mb-2">
+                                    <span class="me-2">{{ rating }}★</span>
+                                    <div class="progress flex-grow-1 me-2" style="height: 8px;">
+                                        <div class="progress-bar bg-warning" 
+                                             style="width: {% widthratio count rating_stats.total_reviews 100 %}%"></div>
+                                    </div>
+                                    <small class="text-muted">{{ count }}</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+
+                    {% else %}
+                        <div class="text-center">
+                            <i class="fas fa-star text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No reviews yet</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Write Review Button -->
+            {% if user.is_authenticated %}
+                {% if can_review %}
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <a href="{% url 'reviews:create_review' property.id %}" class="btn btn-primary">
+                                <i class="fas fa-pen"></i> Write a Review
+                            </a>
+                        </div>
+                    </div>
+                {% elif has_reviewed %}
+                    <div class="card shadow">
+                        <div class="card-body text-center">
+                            <p class="text-muted mb-2">You've already reviewed this property</p>
+                            <a href="{% url 'reviews:my_reviews' %}" class="btn btn-outline-primary btn-sm">
+                                View My Reviews
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <p class="text-muted mb-2">Sign in to write a review</p>
+                        <a href="{% url 'auth:login' %}" class="btn btn-outline-primary btn-sm">
+                            Sign In
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Reviews List -->
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0">
+                        <i class="fas fa-comments"></i> All Reviews
+                        {% if rating_stats.total_reviews %}
+                            <span class="badge bg-primary ms-2">{{ rating_stats.total_reviews }}</span>
+                        {% endif %}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if page_obj %}
+                        {% for review in page_obj %}
+                            <div class="review-item border-bottom pb-3 mb-3">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div>
+                                        <h6 class="mb-1">{{ review.title }}</h6>
+                                        <div class="text-warning mb-1">
+                                            {% for i in "12345" %}
+                                                {% if forloop.counter <= review.rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <span class="ms-2 text-muted">{{ review.rating }}/5</span>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                
+                                <p class="mb-2">{{ review.comment }}</p>
+                                
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <small class="text-muted">By {{ review.user.username }}</small>
+                                    {% if user.is_authenticated and user == review.user %}
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{% url 'reviews:edit_review' review.id %}" class="btn btn-outline-primary btn-sm">
+                                                <i class="fas fa-edit"></i> Edit
+                                            </a>
+                                            <a href="{% url 'reviews:delete_review' review.id %}" class="btn btn-outline-danger btn-sm">
+                                                <i class="fas fa-trash"></i> Delete
+                                            </a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                {% if review.is_recent %}
+                                    <span class="badge bg-success">Recent</span>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+
+                        <!-- Pagination -->
+                        {% if page_obj.has_other_pages %}
+                            <nav aria-label="Reviews pagination">
+                                <ul class="pagination justify-content-center">
+                                    {% if page_obj.has_previous %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                                        </li>
+                                    {% endif %}
+
+                                    {% for num in page_obj.paginator.page_range %}
+                                        {% if page_obj.number == num %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ num }}</span>
+                                            </li>
+                                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    {% if page_obj.has_next %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                                        </li>
+                                    {% endif %}
+                                </ul>
+                            </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-comments text-muted" style="font-size: 3rem;"></i>
+                            <p class="text-muted mt-2">No reviews yet for this property</p>
+                            {% if user.is_authenticated and can_review %}
+                                <a href="{% url 'reviews:create_review' property.id %}" class="btn btn-primary">
+                                    Be the first to review!
+                                </a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.card {
+    border-radius: 12px;
+    border: none;
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+.review-item:last-child {
+    border-bottom: none !important;
+}
+
+.progress {
+    border-radius: 4px;
+}
+
+.rating-distribution .progress {
+    background-color: #f8f9fa;
+}
+</style>
+{% endblock %} 

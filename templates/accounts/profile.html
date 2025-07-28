@@ -86,7 +86,7 @@
                                         <strong>Check-in:</strong> {{ booking.check_in_date|date:"M d, Y" }}<br>
                                         <strong>Check-out:</strong> {{ booking.check_out_date|date:"M d, Y" }}<br>
                                         <strong>Status:</strong> {{ booking.status|capfirst }}<br>
-                                        <strong>Total:</strong> ${{ booking.total_price }}
+                                        <strong>Total:</strong> ₹{{ booking.total_price }}
                                     </p>
                                     <a href="{% url 'bookings:booking_detail' booking.pk %}" class="btn btn-outline-primary btn-sm">View</a>
                                 </div>

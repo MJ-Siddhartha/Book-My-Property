@@ -55,4 +55,25 @@ A Django-based property booking platform where owners can list properties and te
 ## Notes
 
 - Media uploads (avatars, property images) are stored in `/media/`.
-- Static files are managed by Django's staticfiles app. 
+- Static files are managed by Django's staticfiles app.
+- All prices are displayed in Indian Rupees (₹).
+
+## Testing the Ratings System
+
+To create sample ratings for testing:
+
+```bash
+python manage.py create_sample_ratings --count 20
+```
+
+This will create sample ratings for testing the rating system.
+
+## Managing Booking Statuses
+
+To automatically update booking statuses based on dates:
+
+```bash
+python manage.py update_booking_statuses
+```
+
+This will mark completed bookings as 'completed' based on their check-out dates. 

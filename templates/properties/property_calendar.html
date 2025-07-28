@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ property.title }} - Availability Calendar{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0">
+                            <i class="fas fa-calendar-alt"></i> 
+                            {{ property.title }} - Availability Calendar
+                        </h4>
+                        <a href="{% url 'properties:property_detail' property.pk %}" class="btn btn-outline-dark btn-sm">
+                            <i class="fas fa-arrow-left"></i> Back to Property
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Calendar Navigation -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <a href="?year={{ prev_year }}&month={{ prev_month }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-chevron-left"></i> Previous Month
+                        </a>
+                        <h5 class="mb-0">{{ month_name }} {{ current_year }}</h5>
+                        <a href="?year={{ next_year }}&month={{ next_month }}" class="btn btn-outline-secondary">
+                            Next Month <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+
+                    <!-- Calendar -->
+                    <div class="calendar-container" style="background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px); border-radius: 20px; padding: 20px; margin: 20px 0;">
+                        <table class="table table-bordered calendar-table">
+                            <thead>
+                                <tr>
+                                    <th class="text-center">Sun</th>
+                                    <th class="text-center">Mon</th>
+                                    <th class="text-center">Tue</th>
+                                    <th class="text-center">Wed</th>
+                                    <th class="text-center">Thu</th>
+                                    <th class="text-center">Fri</th>
+                                    <th class="text-center">Sat</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for week in calendar %}
+                                <tr>
+                                    {% for day_data in week %}
+                                        {% if day_data.day == 0 %}
+                                            <td class="empty-day"></td>
+                                        {% else %}
+
+                                            <td class="calendar-day {% if day_data.is_past %}past{% elif day_data.is_today %}today{% elif day_data.is_booked %}booked{% else %}available{% endif %}">
+                                                <div class="day-content">
+                                                    <span class="day-number">{{ day_data.day }}</span>
+                                                </div>
+                                            </td>
+                                        {% endif %}
+                                    {% endfor %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Legend -->
+                    <div class="calendar-legend mt-4">
+                        <h6>Legend:</h6>
+                        <div class="d-flex flex-wrap gap-3">
+                            <div class="d-flex align-items-center">
+                                <div class="legend-item available-legend"></div>
+                                <small class="ms-2">Available</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="legend-item booked-legend"></div>
+                                <small class="ms-2">Booked</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="legend-item today-legend"></div>
+                                <small class="ms-2">Today</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <div class="legend-item past-legend"></div>
+                                <small class="ms-2">Past</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    {% if user.is_authenticated %}
+                        {% if user.userprofile.user_type == 'tenant' %}
+                            <a href="{% url 'bookings:booking_create' property.pk %}" class="btn btn-primary w-100 mb-3">
+                                <i class="fas fa-calendar-check"></i> Book This Property
+                            </a>
+                        {% else %}
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Only tenants can book properties.
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <a href="{% url 'auth:login' %}?next={{ request.path }}" class="btn btn-primary w-100 mb-3">
+                            <i class="fas fa-sign-in-alt"></i> Login to Book
+                        </a>
+                    {% endif %}
+
+                    <div class="property-summary">
+                        <h6>Property Details</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-home"></i> {{ property.get_property_type_display }}</li>
+                            <li><i class="fas fa-bed"></i> {{ property.bedrooms }} bedrooms</li>
+                            <li><i class="fas fa-bath"></i> {{ property.bathrooms }} bathrooms</li>
+                            <li><i class="fas fa-users"></i> Up to {{ property.max_guests }} guests</li>
+                            <li><i class="fas fa-rupee-sign"></i> ₹{{ property.price_per_night }}/night</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.calendar-table {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.calendar-table .calendar-day {
+    height: 80px;
+    width: 14.28%;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.calendar-table .calendar-day:hover {
+    transform: scale(1.02);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    z-index: 10;
+}
+
+.calendar-table .day-content {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 5px;
+    position: relative;
+    z-index: 1;
+}
+
+.calendar-table .day-number {
+    font-weight: 600;
+    font-size: 1.1em;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    letter-spacing: 0.5px;
+}
+
+.calendar-table .today {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%) !important;
+    border: 2px solid #ffc107 !important;
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.calendar-table .past {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%) !important;
+    color: #6c757d !important;
+    opacity: 0.7 !important;
+    backdrop-filter: blur(5px) !important;
+}
+
+.calendar-table .booked {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.calendar-table .available {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%) !important;
+    color: white !important;
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4) !important;
+    backdrop-filter: blur(10px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.calendar-table .empty-day {
+    background: linear-gradient(135deg, rgba(248, 249, 250, 0.5) 0%, rgba(233, 236, 239, 0.5) 100%);
+    backdrop-filter: blur(5px);
+}
+
+.calendar-legend {
+    border-top: 1px solid rgba(222, 226, 230, 0.5);
+    padding-top: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.legend-item {
+    width: 25px;
+    height: 25px;
+    border-radius: 6px;
+    margin-right: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.available-legend {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.booked-legend {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+}
+
+.today-legend {
+    background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.past-legend {
+    background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+    opacity: 0.7;
+}
+
+@media (max-width: 768px) {
+    .calendar-day {
+        height: 60px;
+    }
+    
+    .day-number {
+        font-size: 0.9em;
+    }
+    
+
+}
+</style>
+{% endblock %} 

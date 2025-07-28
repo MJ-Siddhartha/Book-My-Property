@@ -6,8 +6,11 @@ from django.db.models import Q
 from .models import Property, PropertyImage, Amenity
 from .forms import PropertyForm, PropertyImageForm, PropertySearchForm
 from bookings.models import Booking
+from reviews.models import Review
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from datetime import datetime, timedelta
+import calendar
 
 def home(request):
     """Home page with search form"""
@@ -17,11 +20,8 @@ def home(request):
     return render(request, 'properties/home.html', context)
 
 def property_list(request):
-    """List all available properties"""
-    properties = Property.objects.filter(
-        is_available=True, 
-        status='available'
-    ).order_by('-created_at')
+    """List all properties with availability information"""
+    properties = Property.objects.all().order_by('-created_at')
     
     # Apply search filters
     search_form = PropertySearchForm(request.GET)
@@ -78,19 +78,126 @@ def property_detail(request, pk):
     
     # Check if user has already booked this property
     user_has_booked = False
+    user_bookings = []
+    user_has_reviewed = False
+    user_review = None
+    
     if request.user.is_authenticated:
-        user_has_booked = Booking.objects.filter(
+        user_bookings = Booking.objects.filter(
             property_obj=property_obj,
-            guest=request.user,
-            status__in=['confirmed', 'completed']
-        ).exists()
+            guest=request.user
+        ).order_by('-created_at')
+        
+        user_has_booked = user_bookings.exists()
+        
+        # Check if user has reviewed this property
+        user_review = Review.objects.filter(
+            property_obj=property_obj,
+            user=request.user
+        ).first()
+        user_has_reviewed = user_review is not None
+    
+    # Get current and upcoming bookings for this property
+    current_bookings = Booking.objects.filter(
+        property_obj=property_obj,
+        status__in=['confirmed', 'pending']
+    ).order_by('check_in_date')
     
     context = {
         'property': property_obj,
         'images': images,
         'user_has_booked': user_has_booked,
+        'user_bookings': user_bookings,
+        'user_has_reviewed': user_has_reviewed,
+        'user_review': user_review,
+        'can_review': request.user.is_authenticated and user_has_booked,
+        'current_bookings': current_bookings,
     }
     return render(request, 'properties/property_detail.html', context)
+
+def property_calendar(request, pk):
+    """Show property availability calendar"""
+    property_obj = get_object_or_404(Property, pk=pk)
+    
+    # Get current month and year
+    today = datetime.now()
+    year = int(request.GET.get('year', today.year))
+    month = int(request.GET.get('month', today.month))
+    
+    # Create calendar
+    cal = calendar.monthcalendar(year, month)
+    
+    # Get all bookings for this property in the current month
+    start_date = datetime(year, month, 1).date()
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1).date() - timedelta(days=1)
+    else:
+        end_date = datetime(year, month + 1, 1).date() - timedelta(days=1)
+    
+    bookings = Booking.objects.filter(
+        property_obj=property_obj,
+        check_in_date__lte=end_date,
+        check_out_date__gte=start_date,
+        status__in=['confirmed', 'pending']
+    )
+    
+    # Create availability data for each day
+    availability_data = {}
+    for day in range(1, end_date.day + 1):
+        current_date = datetime(year, month, day).date()
+        
+        # Check if this date is booked
+        is_booked = bookings.filter(
+            check_in_date__lte=current_date,
+            check_out_date__gt=current_date
+        ).exists()
+        
+        availability_data[day] = {
+            'date': current_date,
+            'is_booked': is_booked,
+            'is_today': current_date == today.date(),
+            'is_past': current_date < today.date(),
+        }
+    
+
+    
+    # Create a list of calendar weeks with availability data
+    calendar_with_availability = []
+    for week in cal:
+        week_data = []
+        for day in week:
+            if day == 0:
+                week_data.append({'day': 0, 'is_booked': False, 'is_today': False, 'is_past': False})
+            else:
+                day_data = availability_data.get(day, {})
+                week_data.append({
+                    'day': day,
+                    'is_booked': day_data.get('is_booked', False),
+                    'is_today': day_data.get('is_today', False),
+                    'is_past': day_data.get('is_past', False)
+                })
+        calendar_with_availability.append(week_data)
+    
+    # Navigation
+    prev_month = month - 1 if month > 1 else 12
+    prev_year = year if month > 1 else year - 1
+    next_month = month + 1 if month < 12 else 1
+    next_year = year if month < 12 else year + 1
+    
+    context = {
+        'property': property_obj,
+        'calendar': calendar_with_availability,
+        'availability_data': availability_data,
+        'current_year': year,
+        'current_month': month,
+        'month_name': calendar.month_name[month],
+        'prev_month': prev_month,
+        'prev_year': prev_year,
+        'next_month': next_month,
+        'next_year': next_year,
+        'today': today.date(),
+    }
+    return render(request, 'properties/property_calendar.html', context)
 
 @login_required
 def property_create(request):
